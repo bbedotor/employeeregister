@@ -66,7 +66,6 @@ namespace employeeregister.Functions.Functions
         public static async Task<IActionResult> UpdateRegister(
             [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route ="register/{id}")] HttpRequest req,
             [Table("register",Connection = "AzureWebJobsStorage")]CloudTable todoTable,
-
             string id,
             ILogger log
             )
@@ -139,6 +138,35 @@ namespace employeeregister.Functions.Functions
 
         }
 
+        [FunctionName(nameof(GetregisterByid))]
+        public static IActionResult GetregisterByid(
+             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "register/{id}")] HttpRequest req,
+             [Table("Register", "TODO", "{id}", Connection = "AzureWebJobsStorage")] RegisterEntity todoentity,
+             string id,
+             ILogger log
+            ) 
+        {
+            log.LogInformation($"get register by id: {id} received");
+
+            if (todoentity == null)
+            {
+                return new BadRequestObjectResult(new Response 
+                {
+                    IsSuccess = false,
+                    Message = "register not found"
+                });
+            }
+
+            string message = $"Todo: {id} retrieved. ";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response 
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = todoentity
+            });
+        }
 
 
     }
