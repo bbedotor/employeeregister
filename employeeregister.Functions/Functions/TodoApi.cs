@@ -137,6 +137,7 @@ namespace employeeregister.Functions.Functions
             });
 
         }
+       
 
         [FunctionName(nameof(GetregisterByid))]
         public static IActionResult GetregisterByid(
