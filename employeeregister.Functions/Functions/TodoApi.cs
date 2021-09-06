@@ -19,7 +19,7 @@ namespace employeeregister.Functions.Functions
         [FunctionName(nameof(CreateEentry))]
         public static async Task<IActionResult> CreateEentry(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "register")] HttpRequest req,
-            [Table("register", Connection = "AzureWebJobsStorage")] CloudTable todoTable,
+            [Table("register", Connection = "AzureWebJobsStorage")] CloudTable registerTable,
             ILogger log)
         {
             log.LogInformation("Recieved a new entry");
@@ -50,7 +50,7 @@ namespace employeeregister.Functions.Functions
             };
 
             TableOperation addOperation = TableOperation.Insert(todoEntity);
-            await todoTable.ExecuteAsync(addOperation);
+            await registerTable.ExecuteAsync(addOperation);
             string message = "New register stored in table";
             log.LogInformation(message);
 
@@ -60,6 +60,63 @@ namespace employeeregister.Functions.Functions
                 Message = message,
                 Result = todoEntity
             });
+        } 
+
+        [FunctionName(nameof(UpdateRegister))]
+        public static async Task<IActionResult> UpdateRegister(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route ="register/{id}")] HttpRequest req,
+            [Table("register",Connection = "AzureWebJobsStorage")]CloudTable todoTable,
+
+            string id,
+            ILogger log
+            )
+        {
+            log.LogInformation($"update for register {id}, received");
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            Register todo = JsonConvert.DeserializeObject<Register>(requestBody);
+
+            // validate register
+
+            TableOperation findOperation = TableOperation.Retrieve<RegisterEntity>("TODO", id);
+            TableResult findResult = await todoTable.ExecuteAsync(findOperation);
+
+            if (findResult.Result == null)
+            {
+                return new BadRequestObjectResult(new Response 
+                {
+                    IsSuccess = false,
+                    Message = "Register not found"
+                });
+
+            }
+
+            // update register
+
+            RegisterEntity todoentity =  (RegisterEntity)findResult.Result;
+            todoentity.consolidated = todo.consolidated;
+            todoentity.Type = todo.Type;
+
+            if (!string.IsNullOrEmpty(todo.IdEmployee))
+            {
+                todoentity.IdEmployee = todo.IdEmployee;
+            }
+
+            TableOperation addOperation = TableOperation.Replace(todoentity);
+            await todoTable.ExecuteAsync(addOperation);
+
+            string message = $"register: {id}, update in table. ";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response 
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = todoentity
+            });
+
         }
+
+
+
     }
 }
