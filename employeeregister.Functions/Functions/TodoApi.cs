@@ -60,12 +60,12 @@ namespace employeeregister.Functions.Functions
                 Message = message,
                 Result = todoEntity
             });
-        } 
+        }
 
         [FunctionName(nameof(UpdateRegister))]
         public static async Task<IActionResult> UpdateRegister(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route ="register/{id}")] HttpRequest req,
-            [Table("register",Connection = "AzureWebJobsStorage")]CloudTable todoTable,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "register/{id}")] HttpRequest req,
+            [Table("register", Connection = "AzureWebJobsStorage")] CloudTable todoTable,
             string id,
             ILogger log
             )
@@ -81,7 +81,7 @@ namespace employeeregister.Functions.Functions
 
             if (findResult.Result == null)
             {
-                return new BadRequestObjectResult(new Response 
+                return new BadRequestObjectResult(new Response
                 {
                     IsSuccess = false,
                     Message = "Register not found"
@@ -91,7 +91,7 @@ namespace employeeregister.Functions.Functions
 
             // update register
 
-            RegisterEntity todoentity =  (RegisterEntity)findResult.Result;
+            RegisterEntity todoentity = (RegisterEntity)findResult.Result;
             todoentity.consolidated = todo.consolidated;
             todoentity.Type = todo.Type;
 
@@ -106,7 +106,7 @@ namespace employeeregister.Functions.Functions
             string message = $"register: {id}, update in table. ";
             log.LogInformation(message);
 
-            return new OkObjectResult(new Response 
+            return new OkObjectResult(new Response
             {
                 IsSuccess = true,
                 Message = message,
@@ -117,10 +117,10 @@ namespace employeeregister.Functions.Functions
 
         [FunctionName(nameof(GetAllRegister))]
         public static async Task<IActionResult> GetAllRegister(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route ="register")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "register")] HttpRequest req,
             [Table("register", Connection = "AzureWebJobsStorage")] CloudTable todoTable,
             ILogger log
-            ) 
+            )
         {
             log.LogInformation("Get all register Received");
             TableQuery<RegisterEntity> query = new TableQuery<RegisterEntity>();
@@ -129,7 +129,7 @@ namespace employeeregister.Functions.Functions
             string message = "Retrieve all todos";
             log.LogInformation(message);
 
-            return new OkObjectResult(new Response 
+            return new OkObjectResult(new Response
             {
                 IsSuccess = true,
                 Message = message,
@@ -144,13 +144,13 @@ namespace employeeregister.Functions.Functions
              [Table("Register", "TODO", "{id}", Connection = "AzureWebJobsStorage")] RegisterEntity todoentity,
              string id,
              ILogger log
-            ) 
+            )
         {
             log.LogInformation($"get register by id: {id} received");
 
             if (todoentity == null)
             {
-                return new BadRequestObjectResult(new Response 
+                return new BadRequestObjectResult(new Response
                 {
                     IsSuccess = false,
                     Message = "register not found"
@@ -160,7 +160,7 @@ namespace employeeregister.Functions.Functions
             string message = $"Todo: {id} retrieved. ";
             log.LogInformation(message);
 
-            return new OkObjectResult(new Response 
+            return new OkObjectResult(new Response
             {
                 IsSuccess = true,
                 Message = message,
@@ -168,6 +168,38 @@ namespace employeeregister.Functions.Functions
             });
         }
 
+        [FunctionName(nameof(DeleteRegister))]
+
+        public static async Task<IActionResult> DeleteRegister(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "register/{id}")] HttpRequest req,
+            [Table("register", "TODO", "{id}", Connection = "AzureWebJobsStorage")] RegisterEntity todoentity,
+            [Table("register", Connection = "AzureWebJobsStorage")] CloudTable todoTable,
+            string id,
+            ILogger log
+             )
+        {
+            log.LogInformation($"delete todo: {id} received");
+
+            if (todoentity == null)
+            {
+                return new BadRequestObjectResult(new Response
+                {
+                    IsSuccess = false,
+                    Message = "Register not found"
+                });
+            }
+
+            await todoTable.ExecuteAsync(TableOperation.Delete(todoentity));
+            string message = $"Register:{id}, deleted";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = todoentity
+            });
+        }
 
     }
 }
