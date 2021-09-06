@@ -116,6 +116,29 @@ namespace employeeregister.Functions.Functions
 
         }
 
+        [FunctionName(nameof(GetAllRegister))]
+        public static async Task<IActionResult> GetAllRegister(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route ="register")] HttpRequest req,
+            [Table("register", Connection = "AzureWebJobsStorage")] CloudTable todoTable,
+            ILogger log
+            ) 
+        {
+            log.LogInformation("Get all register Received");
+            TableQuery<RegisterEntity> query = new TableQuery<RegisterEntity>();
+            TableQuerySegment<RegisterEntity> todos = await todoTable.ExecuteQuerySegmentedAsync(query, null);
+
+            string message = "Retrieve all todos";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response 
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = todos
+            });
+
+        }
+
 
 
     }
