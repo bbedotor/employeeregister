@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Microsoft.WindowsAzure.Storage.Table;
+using System;
 
 namespace employeeregister.Functions.Entities
 {
-    internal class ConsolidateEntity
+    public class ConslidateEntity : TableEntity
     {
         public string IdEmployee { get; set; }
         public DateTime Date { get; set; }

@@ -62,6 +62,53 @@ namespace employeeregister.Functions.Functions
             });
         }
 
+
+        [FunctionName(nameof(Createconsolidate))]
+        public static async Task<IActionResult> Createconsolidate(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "consolidate")] HttpRequest req,
+            [Table("consolidate", Connection = "AzureWebJobsStorage")] CloudTable registerTable,
+            ILogger log)
+        {
+            log.LogInformation("Recieved a new consolidate");
+
+            string name = req.Query["name"];
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            Conslidate consolidate = JsonConvert.DeserializeObject<Conslidate>(requestBody);
+
+            if (string.IsNullOrEmpty(consolidate?.IdEmployee))
+            {
+                return new BadRequestObjectResult(new Response
+                {
+                    IsSuccess = false,
+                    Message = "the request must have a Employee"
+                });
+            }
+
+            ConslidateEntity conslidate = new ConslidateEntity
+            {
+                ETag = "*",
+                PartitionKey = "TODO",
+                RowKey = Guid.NewGuid().ToString(),
+                Date = DateTime.UtcNow,
+                IdEmployee = consolidate.IdEmployee,
+                 minutes = consolidate.minutes
+
+            };
+
+            TableOperation addOperation = TableOperation.Insert(conslidate);
+            await registerTable.ExecuteAsync(addOperation);
+            string message = "New register stored in table";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = conslidate
+            });
+        }
+
         [FunctionName(nameof(UpdateRegister))]
         public static async Task<IActionResult> UpdateRegister(
             [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "register/{id}")] HttpRequest req,
@@ -127,6 +174,28 @@ namespace employeeregister.Functions.Functions
             TableQuerySegment<RegisterEntity> todos = await todoTable.ExecuteQuerySegmentedAsync(query, null);
 
             string message = "Retrieve all todos";
+            log.LogInformation(message);
+
+            return new OkObjectResult(new Response
+            {
+                IsSuccess = true,
+                Message = message,
+                Result = todos
+            });
+
+        }
+        [FunctionName(nameof(GetAllconsolidate))]
+        public static async Task<IActionResult> GetAllconsolidate(
+           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "consolidate")] HttpRequest req,
+           [Table("consolidate", Connection = "AzureWebJobsStorage")] CloudTable todoTable,
+           ILogger log
+           )
+        {
+            log.LogInformation("Get all consolidate Received");
+            TableQuery<ConslidateEntity> query = new TableQuery<ConslidateEntity>();
+            TableQuerySegment<ConslidateEntity> todos = await todoTable.ExecuteQuerySegmentedAsync(query, null);
+
+            string message = "Retrieve all cosolidates";
             log.LogInformation(message);
 
             return new OkObjectResult(new Response
