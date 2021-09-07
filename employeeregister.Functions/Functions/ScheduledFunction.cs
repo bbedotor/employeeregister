@@ -1,17 +1,16 @@
-using System;
-using System.Threading.Tasks;
 using employeeregister.Functions.Entities;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
+using System;
+using System.Threading.Tasks;
 
 namespace employeeregister.Functions.Functions
 {
     public static class ScheduledFunction
     {
         [FunctionName("ScheduledFunction")]
-        public static async Task Run([TimerTrigger("0 */1 * * * *")]TimerInfo myTimer,
+        public static async Task Run([TimerTrigger("0 */1 * * * *")] TimerInfo myTimer,
             [Table("register", Connection = "AzureWebJobsStorage")] CloudTable todoTable,
             ILogger log)
         {
@@ -33,7 +32,7 @@ namespace employeeregister.Functions.Functions
                 await todoTable.ExecuteAsync(addOperation);
                 replace++;
             }
-                
+
             log.LogInformation($"consolidate: {replace} items at: {DateTime.Now}");
         }
     }
